@@ -16,6 +16,7 @@ import com.ventooth.swansong.shader.texbuf.BufferConfig;
 import com.ventooth.swansong.shader.texbuf.ColorBuffers;
 import com.ventooth.swansong.sufrace.Framebuffer;
 import com.ventooth.swansong.sufrace.Texture2D;
+import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.NonNull;
 import lombok.val;
 import org.jetbrains.annotations.NotNull;
@@ -23,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -178,14 +180,16 @@ public class DrawBuffers {
     }
 
     public void attachTo(List<GBufferShader> gBufferList) {
+        val shared = new HashMap<IntList, Framebuffer>();
         for (val shader : gBufferList) {
             if (shader.framebuffer != null) {
                 shader.framebuffer.deinit();
             }
-            shader.framebuffer = Framebuffer.create(shader.loc()
-                                                          .path(),
-                                                    gColor.getFramebufferAttachments(shader.renderTargets()),
-                                                    gDepthTex);
+            shader.framebuffer = shared.computeIfAbsent(shader.renderTargets(),
+                                                        targets -> Framebuffer.create(shader.loc()
+                                                                                            .path(),
+                                                                                      gColor.getFramebufferAttachments(targets),
+                                                                                      gDepthTex));
         }
     }
 
